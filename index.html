@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>STH Deploy Tool</title>
+    <style>
+        :root {
+            /* Light Theme Palette */
+            --bg: #F5F7FA;
+            --sidebar-bg: rgba(255, 255, 255, 0.7);
+            --card-bg: rgba(255, 255, 255, 0.6);
+            --border: rgba(0, 0, 0, 0.08);
+            --accent: #007AFF;
+            /* Apple Sky Blue */
+            --accent-light: #5AC8FA;
+            --text: #1C1C1E;
+            --text-dim: #8E8E93;
+            --terminal-bg: rgba(28, 28, 30, 0.95);
+            --input-bg: rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            /* Mica-like background transition */
+            background-image:
+                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(90, 200, 250, 0.05) 0px, transparent 50%);
+        }
+
+        /* Sidebar */
+        aside {
+            width: 300px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-right: 1px solid var(--border);
+            padding: 40px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            -webkit-app-region: drag;
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        aside * {
+            -webkit-app-region: no-drag;
+        }
+
+        h2 {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 5px;
+        }
+
+        label {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        input {
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text);
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 13px;
+        }
+
+        input:focus {
+            background: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+
+        button:hover {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Main Section */
+        main {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Card Decoration */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .card:hover {
+            border-color: rgba(0, 122, 255, 0.3);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #D1D1D6;
+            position: absolute;
+            top: 24px;
+            right: 24px;
+        }
+
+        .status-dot.active {
+            background: #34C759;
+            box-shadow: 0 0 12px #34C759;
+        }
+
+        /* Terminal Output */
+        .terminal-container {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .terminal {
+            height: 220px;
+            background: var(--terminal-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "SF Mono", monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #D1D1D1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .terminal-header {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .log-line.system {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.02);
+            position: relative;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(0, 122, 255, 0.05);
+            color: var(--accent);
+        }
+
+        .drop-zone p {
+            margin: 0;
+            pointer-events: none;
+        }
+
+        .file-name {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 600;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Expanded Terminal Mode */
+        .terminal.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            height: 80%;
+            z-index: 1000;
+            background: rgba(20, 20, 22, 0.98);
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+        }
+
+        /* Overlay backdrop when expanded */
+        .terminal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .terminal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="terminal-overlay" id="terminal-overlay"></div>
+    <aside>
+        <section>
+            <h2>GIT OPS CONFIG</h2>
+            <div class="input-group">
+                <label>Repo URL</label>
+                <input type="text" id="git_repo_url" placeholder="https://github.com/repo">
+            </div>
+            <div class="input-group">
+                <label>Git User</label>
+                <input type="text" id="username">
+            </div>
+            <div class="input-group">
+                <label>Git Pass</label>
+                <input type="password" id="password">
+            </div>
+        </section>
+
+        <section style="margin-top: 10px;">
+            <h2>REGISTRY AUTH</h2>
+            <div class="input-group">
+                <label>Registry User</label>
+                <input type="text" id="reg_username" placeholder="docker_user">
+            </div>
+            <div class="input-group">
+                <label>Registry Pass</label>
+                <input type="password" id="reg_password">
+            </div>
+        </section>
+
+        <button id="save_global" style="margin-top: 10px;">SAVE ALL CONFIG</button>
+        <div style="margin-top: auto; font-size: 10px; color: var(--text-dim); text-align: center;">STH DEPLOYER V2.0
+            PRO</div>
+    </aside>
+
+    <main>
+        <div class="header">
+            <h1>STH <span>DEPLOYER</span></h1>
+            <button style="background: white; color: var(--text); border: 1px solid var(--border); box-shadow: none;"
+                onclick="clearLogs()">CLEAR TERMINAL</button>
+        </div>
+
+        <div class="grid" id="service_grid">
+            <!-- Cards will be injected by renderer.js -->
+        </div>
+
+        <div class="terminal-container">
+            <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>LIVE LOGS</span>
+                <span id="expand-btn" style="cursor: pointer; font-size: 16px;">⤢</span>
+            </div>
+            <div class="terminal" id="terminal">
+                <p class="log-line system">> Application started. Ready for deployment.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>
