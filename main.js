@@ -79,7 +79,7 @@ ipcMain.handle('show-popup', (event, { type, title, message }) => {
 // --- Deployment Logic ---
 ipcMain.on('run-deploy', async (event, { serviceName, tag, registryUrl, globalConfig, tarPath, manifestPath }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    const log = (msg) => win.webContents.send('log-output', msg);
+    const log = (msg, type = '') => win.webContents.send('log-output', { serviceName, message: msg, type });
 
     log(`--- Initiating deployment: ${serviceName}:${tag} ---`);
 

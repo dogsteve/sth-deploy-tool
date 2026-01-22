@@ -115,6 +115,18 @@
             transform: translateY(0);
         }
 
+        button.secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text);
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        button.secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+            box-shadow: none;
+        }
+
         /* Main Section */
         main {
             flex: 1;
@@ -167,6 +179,12 @@
             border-color: rgba(0, 122, 255, 0.3);
             transform: translateY(-6px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent), 0 12px 30px rgba(0, 122, 255, 0.2);
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .card h3 {
